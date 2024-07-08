@@ -1,5 +1,6 @@
 const express = require('express');
 const { Telegraf } = require('telegraf');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
