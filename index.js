@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 
 app.use(async (req, res, next) => {
   const incomingRes = req.body;
-  if (incomingRes && incomingRes.message && update.message.from) {
+  if (incomingRes && incomingRes.message && incomingRes.message.from) {
     const telegramId = incomingRes.message.from.id;
     const telegramName = incomingRes.message.from.first_name + ' ' + incomingRes.message.from.last_name; 
     if (telegramId !== AUTHORIZED_TELEGRAM_ID) {
