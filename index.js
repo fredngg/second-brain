@@ -6,12 +6,34 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const AUTHORIZED_TELEGRAM_ID = process.env.TELEGRAM_ID; 
+const AUTHORIZED_TELEGRAM_ID = parseInt(process.env.TELEGRAM_ID, 10); 
 
 // BOT LOGIC (with Authentication and Dynamic Webhook)
 app.use(bodyParser.json()); // Parse incoming JSON payloads
 
-// Middleware to filter empty payloads (remains unchanged)
+// Dynamic Webhook Setup and Handling
+app.use(async (req, res, next) => {
+    try {
+      const webhookInfo = await bot.telegram.getWebhookInfo();
+      if (!webhookInfo.url) {
+        // Webhook not set, set it now
+        await bot.telegram.setWebhook(`${process.env.HEROKU_APP_URL}`);
+        console.log("Webhook set!");
+      } else {
+        console.log("Webhook is already set:", webhookInfo.url); // Log if set
+      }
+
+      // If webhook is set, proceed with the callback
+      return next();
+    } catch (error) {
+      console.error("Error setting/checking webhook:", error);
+      return res.sendStatus(500); // Internal Server Error
+    }
+  });
+
+app.use(bot.webhookCallback("/"));
+
+// Middleware to filter empty payloads 
 app.use((req, res, next) => {
   // Check if the payload is an empty object
   if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
@@ -28,38 +50,16 @@ app.use(async (req, res, next) => {
   if (incomingRes && incomingRes.message && incomingRes.message.from) {
     const telegramId = incomingRes.message.from.id;
     const telegramName = incomingRes.message.from.first_name + ' ' + incomingRes.message.from.last_name; 
-    console.log('telegramId:' + telegramId + AUTHORIZED_TELEGRAM_ID); 
     if (telegramId !== AUTHORIZED_TELEGRAM_ID) {
       await bot.telegram.sendMessage(
         telegramId,
         "This is not available to you."
       );
-      console.log("this is working"); 
       return res.sendStatus(200); // Stop further processing
     }
   }
   next(); // Continue to webhook if authorized
 });
-
-// Dynamic Webhook Setup and Handling
-app.use(async (req, res, next) => {
-  try {
-    const webhookInfo = await bot.telegram.getWebhookInfo();
-    if (!webhookInfo.url) {
-      // Webhook not set, set it now
-      await bot.telegram.setWebhook(`${process.env.HEROKU_APP_URL}`);
-      console.log("Webhook set!");
-    }
-
-    // If webhook is set, proceed with the callback
-    return next();
-  } catch (error) {
-    console.error("Error setting/checking webhook:", error);
-    return res.sendStatus(500); // Internal Server Error
-  }
-});
-
-app.use(bot.webhookCallback("/"));
 
 // ... (rest of your bot commands, handlers, middleware) ...
 
