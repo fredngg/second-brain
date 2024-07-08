@@ -6,64 +6,41 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const AUTHORIZED_TELEGRAM_ID = parseInt(process.env.TELEGRAM_ID, 10); 
+const AUTHORIZED_TELEGRAM_ID = parseInt(process.env.TELEGRAM_ID, 10);
 
 // BOT LOGIC (with Authentication and Dynamic Webhook)
 app.use(bodyParser.json()); // Parse incoming JSON payloads
 
-// Dynamic Webhook Setup and Handling
-app.use(async (req, res, next) => {
-    try {
-      const webhookInfo = await bot.telegram.getWebhookInfo();
-      if (!webhookInfo.url) {
-        // Webhook not set, set it now
-        await bot.telegram.setWebhook(`${process.env.HEROKU_APP_URL}`);
-        console.log("Webhook set!");
-      } else {
-        console.log("Webhook is already set:", webhookInfo.url); // Log if set
-      }
-
-      // If webhook is set, proceed with the callback
-      return next();
-    } catch (error) {
-      console.error("Error setting/checking webhook:", error);
-      return res.sendStatus(500); // Internal Server Error
-    }
-  });
-
 app.use(bot.webhookCallback("/"));
 
-// Middleware to filter empty payloads 
-app.use((req, res, next) => {
-  // Check if the payload is an empty object
-  if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
-    console.log("Empty payload received - Ignoring");
-    return res.sendStatus(200); // Send an OK response to avoid errors
-  }
-  console.log('passes this part'); 
-  next(); // Continue processing if the payload is not empty
-});
+bot.use(async (ctx, next) => {
+  const update = ctx.update; // Use ctx.update instead of req.body
 
-app.use(async (req, res, next) => {
-  console.log('here'); 
-  const incomingRes = req.body;
-  if (incomingRes && incomingRes.message && incomingRes.message.from) {
-    const telegramId = incomingRes.message.from.id;
-    const telegramName = incomingRes.message.from.first_name + ' ' + incomingRes.message.from.last_name; 
+  // Middleware to filter empty payloads
+  if (Object.keys(update).length === 0 && update.constructor === Object) {
+    console.log("Empty update received - Ignoring");
+    return; // No need to send a response here, just stop processing
+  }
+
+  // Authentication Middleware
+  if (update.message && update.message.from) {
+    const telegramId = update.message.from.id;
+    const telegramName =
+      update.message.from.first_name + " " + update.message.from.last_name;
     if (telegramId !== AUTHORIZED_TELEGRAM_ID) {
-      await bot.telegram.sendMessage(
-        telegramId,
-        "This is not available to you."
-      );
-      return res.sendStatus(200); // Stop further processing
+      await ctx.reply("This is not available to you."); // Use ctx.reply directly
+      return; // Stop processing the update
     }
   }
-  next(); // Continue to webhook if authorized
+  console.log("it comes here");
+  // Continue to the next middleware or handler if authorized
+  await next();
 });
 
 // ... (rest of your bot commands, handlers, middleware) ...
+console.log("It is here");
 
-// EXPRESS SERVER START
+// EXPRESS SERVER START for Heroku to avoid port binding error after 60 seconds
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
