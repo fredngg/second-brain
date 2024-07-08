@@ -28,9 +28,10 @@ app.use(async (req, res, next) => {
   if (incomingRes && incomingRes.message && incomingRes.message.from) {
     const telegramId = incomingRes.message.from.id;
     const telegramName = incomingRes.message.from.first_name + ' ' + incomingRes.message.from.last_name; 
+    console.log('telegramId:' + telegramId + AUTHORIZED_TELEGRAM_ID); 
     if (telegramId !== AUTHORIZED_TELEGRAM_ID) {
       await bot.telegram.sendMessage(
-        telegramName,
+        telegramId,
         "This is not available to you."
       );
       console.log("this is working"); 
