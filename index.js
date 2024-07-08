@@ -8,9 +8,8 @@ const PORT = process.env.PORT || 3000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const AUTHORIZED_TELEGRAM_ID = parseInt(process.env.TELEGRAM_ID, 10);
 
-// BOT LOGIC (with Authentication and Dynamic Webhook)
+// BOT AUTHENTICATION AND CALLBACK
 app.use(bodyParser.json()); // Parse incoming JSON payloads
-
 app.use(bot.webhookCallback("/"));
 
 bot.use(async (ctx, next) => {
@@ -28,17 +27,15 @@ bot.use(async (ctx, next) => {
     const telegramName =
       update.message.from.first_name + " " + update.message.from.last_name;
     if (telegramId !== AUTHORIZED_TELEGRAM_ID) {
-      await ctx.reply("This is not available to you."); // Use ctx.reply directly
-      return; // Stop processing the update
+      await ctx.reply("This is not available to you."); 
+      return; 
     }
   }
-  console.log("it comes here");
   // Continue to the next middleware or handler if authorized
   await next();
 });
 
-// ... (rest of your bot commands, handlers, middleware) ...
-console.log("It is here");
+// BOT LOGIC
 
 // EXPRESS SERVER START for Heroku to avoid port binding error after 60 seconds
 app.listen(PORT, () => {
