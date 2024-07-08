@@ -6,7 +6,7 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const AUTHORIZED_TELEGRAM_ID = 112451948; // Replace with the correct ID
+const AUTHORIZED_TELEGRAM_ID = process.env.TELEGRAM_ID; 
 
 // BOT LOGIC (with Authentication and Dynamic Webhook)
 app.use(bodyParser.json()); // Parse incoming JSON payloads
@@ -23,6 +23,7 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
+  console.log('here'); 
   const incomingRes = req.body;
   if (incomingRes && incomingRes.message && incomingRes.message.from) {
     const telegramId = incomingRes.message.from.id;
