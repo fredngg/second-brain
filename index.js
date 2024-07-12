@@ -1,8 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { Telegraf } from "telegraf";
-import { ChatOpenAI } from "langchain/llms/openai";
-import { ChatPromptTemplate,  HumanMessagePromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
+//import { ChatOpenAI } from "langchain/llms/openai";
+//import { ChatPromptTemplate,  HumanMessagePromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -39,6 +39,7 @@ bot.use(async (ctx, next) => {
 });
 
 // Message Handler (both text and voice)
+/*
 bot.on(message(["text", "voice"]), async (ctx) => { 
     console.log('it went here 2'); 
     try {
@@ -71,6 +72,7 @@ async function handleUserInput(ctx, userInput) {
     const response = await chain.call(chainValues); 
     ctx.reply(response.text);
 }
+*/ 
 
 // EXPRESS SERVER START for Heroku to avoid port binding error after 60 seconds
 app.listen(PORT, () => {
