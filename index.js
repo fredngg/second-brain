@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const AUTHORIZED_TELEGRAM_ID = parseInt(process.env.TELEGRAM_ID, 10);
 
+console.log('hey');
 // BOT AUTHENTICATION AND CALLBACK
 app.use(bodyParser.json()); // Parse incoming JSON payloads
 app.use(bot.webhookCallback("/"));
@@ -38,8 +39,9 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-// Message Handler (both text and voice)
 /*
+// Message Handler (both text and voice)
+
 bot.on(message(["text", "voice"]), async (ctx) => { 
     console.log('it went here 2'); 
     try {
